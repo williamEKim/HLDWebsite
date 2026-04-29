@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Starter Decks | Highlander Duelists</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+
+  <!-- PNG Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon/favicon-16x16.png">
+
+  <!-- Apple -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+
+  <!-- Android -->
+  <link rel="icon" type="image/png" sizes="192x192" href="../favicon/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="../favicon/android-chrome-512x512.png">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="../favicon/site.webmanifest">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="style/starter.css">
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <img src="/src/images/logo_no_background.png" alt="Highlander Duelists Logo">
+      <span class="club-name">Highlander Duelists</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="../../index.html">Home</a>
+      <a href="/src/pages/events.html">Events</a>
+      <a href="/src/pages/starter.html">Starter Decks</a>
+      <!-- <a href="/src/pages/officers.html">Officers</a> -->
+      <a href="/src/pages/photos.html">Photos</a>
+      <div class="nav-socials">
+        <a href="https://www.instagram.com/highlanderduelist/" target="_blank">
+          <img src="../images/instagram.png" alt="Instagram">
+        </a>
+        <a href="https://www.youtube.com/@highlanderduelists7081" target="_blank">
+          <img src="../images/youtube.png" alt="YouTube">
+        </a>
+      </div>
+    </div>
+  </nav>
+
+
+  <header>
+    <h1>Starter Deck Cores</h1>
+    <p>Free deck cores available for new Highlander Duelists members.</p>
+  </header>
+
+  <section class="deck-grid" id="deckGrid">
+    <!-- Decks loaded dynamically -->
+  </section>
+
+
+  <div class="apply-section">
+    <button class="apply-btn" onclick="applyDeck()">
+      Apply for Deck Core
+    </button>
+  </div>
+
+    <!-- ---------- Footer ---------- -->
+  <footer>
+    © 2026 Highlander Duelists · UC Riverside
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/14E_CwSdFSKDqTN3qdaxovLcTmaZtZiuKAnnLZBqrtKI/export?format=csv";
+
+
+    fetch(SHEET_URL)
+      .then(response => response.text())
+      .then(csv => {
+        const rows = csv.split("\n").slice(1); // skip header
+        const grid = document.getElementById("deckGrid");
+
+        rows.forEach(row => {
+          if (!row.trim()) return;
+
+          const [title, description, possession, image, reference] =
+            row.split(",").map(cell => cell.replace(/^"|"$/g, ""));
+
+          const card = document.createElement("div");
+          card.className = "deck-card";
+
+          card.innerHTML = `
+            <img src="${image}" alt="${title}">
+            <div class="deck-title">
+              ${
+                reference
+                  ? `<a href="${reference}" target="_blank" rel="noopener noreferrer">${title}</a>`
+                  : title
+              }
+            </div>
+            <div class="deck-desc">${description}</div>
+            <br/>
+            <div class="deck-desc"><strong>Status:</strong> ${possession}</div>
+          `;
+
+          grid.appendChild(card);
+        });
+      })
+      .catch(err => {
+        console.error("Failed to load sheet", err);
+      });
+
+    function applyDeck() {
+      alert("Deck core applications will be available soon!");
+    }
+  </script>
+
+</body>
+</html>

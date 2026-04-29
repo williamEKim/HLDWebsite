@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Formats | Highlander Duelists</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+
+  <!-- PNG Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon/favicon-16x16.png">
+
+  <!-- Apple -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+
+  <!-- Android -->
+  <link rel="icon" type="image/png" sizes="192x192" href="../favicon/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="../favicon/android-chrome-512x512.png">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="../favicon/site.webmanifest">
+  
+  <!-- External CSS -->
+  <link rel="stylesheet" href="style/events.css">
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <img src="/src/images/logo_no_background.png" alt="Highlander Duelists Logo">
+      <span class="club-name">Highlander Duelists</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="../../index.html">Home</a>
+      <a href="/src/pages/events.html">Events</a>
+      <a href="/src/pages/starter.html">Starter Decks</a>
+      <!-- <a href="/src/pages/officers.html">Officers</a> -->
+      <a href="/src/pages/photos.html">Photos</a>
+      <div class="nav-socials">
+        <a href="https://www.instagram.com/highlanderduelist/" target="_blank">
+          <img src="../images/instagram.png" alt="Instagram">
+        </a>
+        <a href="https://www.youtube.com/@highlanderduelists7081" target="_blank">
+          <img src="../images/youtube.png" alt="YouTube">
+        </a>
+      </div>
+    </div>
+  </nav>
+
+
+  <header>
+    <h1>Club Events</h1>
+    <p></p>
+  </header>
+
+  <section class="event-grid" id="eventGrid">
+    <!-- Events are loaded dynamically -->
+  </section>
+
+
+    <!-- ---------- Footer ---------- -->
+  <footer>
+    © 2026 Highlander Duelists · UC Riverside
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    const EVENTS_SHEET_URL =
+      "https://docs.google.com/spreadsheets/d/1660lQBnYyLHw_BbRFmqIrGPmb0NCZhLnGCrhgp6xi_A/export?format=csv";
+
+    // Robust CSV parser — handles newlines and commas inside quoted cells
+    function parseCSV(csv) {
+      const rows = [];
+      let row = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < csv.length; i++) {
+        const ch = csv[i];
+        const next = csv[i + 1];
+
+        if (ch === '"') {
+          if (inQuotes && next === '"') {
+            current += '"'; // escaped ""
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === ',' && !inQuotes) {
+          row.push(current);
+          current = "";
+        } else if ((ch === '\n' || (ch === '\r' && next === '\n')) && !inQuotes) {
+          if (ch === '\r') i++;
+          row.push(current);
+          rows.push(row);
+          row = [];
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+
+      if (current || row.length) {
+        row.push(current);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function formatDate(raw) {
+      if (!raw) return "";
+      const d = new Date(raw.includes("T") ? raw : raw + "T12:00:00");
+      if (isNaN(d)) return raw;
+      return d.toLocaleDateString("en-US", {
+        weekday: "short", month: "short", day: "numeric", year: "numeric"
+      });
+    }
+
+    function truncate(text, maxChars) {
+      if (!text || text.length <= maxChars) return text;
+      return text.slice(0, maxChars).trimEnd() + "…";
+    }
+
+    function buildCard(event, isMain) {
+      const { Date: date, Title, Location, Description, Link } = event;
+      const hasLink = Link && Link.trim() !== "" && Link.trim().toLowerCase() !== "null";
+      const href = hasLink ? Link.trim() : "#";
+
+      const descHTML = isMain
+        ? Description.replace(/\n/g, "<br>")
+        : truncate(Description, 120);
+
+      const card = document.createElement("div");
+      card.className = "event-card " + (isMain ? "main" : "secondary");
+
+      card.innerHTML =
+        (date ? '<div class="event-date">' + formatDate(date) + "</div>" : "") +
+        '<h2 class="event-title">' + (Title || "Untitled Event") + "</h2>" +
+        (Location ? '<div class="event-location">' + Location + "</div>" : "") +
+        (Description ? '<p class="event-description">' + descHTML + "</p>" : "") +
+        (hasLink ? '<a class="event-link" href="' + href + '" target="_blank">Related Link</a>' : "");
+
+      return card;
+    }
+
+    fetch("https://corsproxy.io/?" + encodeURIComponent(EVENTS_SHEET_URL))
+      .then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(csv => {
+        const grid = document.getElementById("eventGrid");
+        grid.innerHTML = "";
+
+        const rows = parseCSV(csv);
+        const headers = rows[0].map(h => h.trim());
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const allEvents = rows.slice(1)
+          .filter(cols => cols.some(c => c.trim()))
+          .map(cols => {
+            const obj = {};
+            headers.forEach((h, i) => (obj[h] = (cols[i] || "").trim()));
+            return obj;
+          });
+
+        const upcoming = allEvents
+          .filter(e => {
+            if (!e.Date) return true;
+            const d = new Date(e.Date.includes("T") ? e.Date : e.Date + "T12:00:00");
+            return isNaN(d) || d >= today;
+          })
+          .sort((a, b) => new Date(a.Date + "T12:00:00") - new Date(b.Date + "T12:00:00"));
+
+        const past = allEvents
+          .filter(e => {
+            if (!e.Date) return false;
+            const d = new Date(e.Date.includes("T") ? e.Date : e.Date + "T12:00:00");
+            return !isNaN(d) && d < today;
+          })
+          .sort((a, b) => new Date(b.Date + "T12:00:00") - new Date(a.Date + "T12:00:00"));
+
+        if (upcoming.length === 0 && past.length === 0) {
+          grid.innerHTML = '<p class="event-placeholder">No events found.</p>';
+          return;
+        }
+
+        // Main banner = soonest upcoming, or most recent past if no upcoming
+        const mainEvent = upcoming.length > 0 ? upcoming[0] : past[0];
+        grid.appendChild(buildCard(mainEvent, true));
+
+        // Top right = next upcoming after main
+        const topRight = upcoming.length > 1 ? upcoming[1] : null;
+
+        // Bottom right = most recent past event
+        // If main is already a past event (no upcoming), skip past[0] since it's the main
+        const bottomRight = upcoming.length > 0 ? past[0] : past[1];
+
+        if (topRight) grid.appendChild(buildCard(topRight, false));
+        if (bottomRight) grid.appendChild(buildCard(bottomRight, false));
+      })
+      .catch(err => {
+        console.error("Failed to load events:", err);
+        document.getElementById("eventGrid").innerHTML =
+          '<p class="event-placeholder">Failed to load events. Please try again later.</p>';
+      });
+  </script>
+
+</body>
+</html>
+
+
+
