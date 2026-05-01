@@ -148,7 +148,7 @@
       return card;
     }
 
-    fetch("https://corsproxy.io/?" + encodeURIComponent(EVENTS_SHEET_URL))
+    fetch(EVENTS_SHEET_URL)
       .then(res => {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.text();
