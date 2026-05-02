@@ -55,6 +55,19 @@
     <img src="src/images/logo_no_background.png" alt="Highlander Duelists Logo" />
     <h1>Highlander Duelists</h1>
     <p>UC Riverside Yu-Gi-Oh! Club for duelists of all skill levels.</p>
+
+    <br/>
+    <br/>
+
+    <h2>Apply for Free Decks!</h2>
+    <p class="freedeck-text">Highlander Duelists offers the free decks to new members of a club. 
+      If you are new to a game or returning to the game from past formats, feel free to check out our storage!
+    </p>
+    <a class="freedeck-link" href="/src/pages/freedecks.html">Click Here to Apply</a>
+
+
+    <h2>Check out our Youtube Channel!</h2>
+    <div class="YT_grid" id="YTGrid"></div>
   </section>
 
 
@@ -110,6 +123,58 @@
     .catch(err => {
       console.error("Failed to load sheet", err);
     });
+
+
+    // Youtube Link
+    const YT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1AOZ_uxMjaQUZiXypMsMB8jERWexkZTPND-aHPmXNi2U/export?format=csv";
+
+    const ytGrid = document.querySelector("#YTGrid");
+
+    fetch(YT_SHEET_URL)
+      .then(response => {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.text();
+      })
+      .then(csv => {
+        const rows = csv.split("\n").slice(1); // skip header
+
+        rows.forEach(row => {
+          if (!row.trim()) return;
+
+          const cols = [...row.matchAll(/("([^"]*)"|([^,]+))/g)].map(m => m[2] ?? m[3] ?? "");
+          const [title, url] = cols;
+
+          // Only pick rows where title is "home"
+          if (title?.trim().toLowerCase() !== "home") return;
+
+          const cleanUrl = url?.trim();
+          if (!cleanUrl) return;
+
+          // Extract YouTube video ID from URL
+          const videoIdMatch = cleanUrl.match(
+            /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+          );
+          if (!videoIdMatch) return;
+
+          const videoId = videoIdMatch[1];
+
+          const iframe = document.createElement("iframe");
+          iframe.src = `https://www.youtube.com/embed/${videoId}`;
+          iframe.title = "YouTube video";
+          iframe.allowFullscreen = true;
+          iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+          iframe.classList.add("yt-embed");
+
+          const wrapper = document.createElement("div");
+          wrapper.classList.add("yt-wrapper");
+          wrapper.appendChild(iframe);
+
+          ytGrid.appendChild(wrapper);
+        });
+      })
+      .catch(err => {
+        console.error("Failed to load YouTube sheet", err);
+      });
 </script>
 
 
