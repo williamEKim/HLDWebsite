@@ -112,7 +112,7 @@
       transition: transform 0.3s ease, filter 0.3s ease;
     }
 
-    .freedeck-link {
+    .freedeck-link, .discord-link{
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -129,7 +129,7 @@
       margin-bottom: 10%;
     }
 
-    .freedeck-text {
+    .freedeck-text, .discord-text {
       align-items: center;
       max-width: 60%;
       margin: 0 auto;        /* centers the block element horizontally */
@@ -168,17 +168,17 @@
       filter: drop-shadow(0 10px 26px rgba(212, 160, 23, 0.6));
     }
 
-    .freedeck-link::after {
+    .freedeck-link::after, .discord-link::after {
       content: '→';
       transition: transform 0.2s;
     }
 
-    .freedeck-link:hover {
+    .freedeck-link:hover, .discord-link:hover  {
       color: #f0c040;
       border-color: #f0c040;
     }
 
-    .freedeck-link:hover::after {
+    .freedeck-link:hover::after, .discord-link:hover::after {
       transform: translateX(4px);
     }
 
@@ -214,6 +214,7 @@
     .sponsors {
       text-align: center;
       padding: 60px 20px;
+      max-width: 100%;
       background-color: #111;
     }
 
